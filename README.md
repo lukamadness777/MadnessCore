@@ -30,7 +30,7 @@ Madness Core provides reusable systems that allow multiple mods to share the sam
 Clone the repository:
 
 ```bash
-git clone https://github.com/LukaMadness/MadnessCore.git
+git clone https://github.com/lukamadness777/MadnessCore.git
 cd MadnessCore
 ```
 
