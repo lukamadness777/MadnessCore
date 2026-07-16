@@ -1,0 +1,30 @@
+{
+  "madnesscore.identity.species_only": "%s",
+  "madnesscore.identity.species_bloodline": "%s with %s blood",
+  "madnesscore.identity.species_bloodline_family": "%s with %s blood, from the %s family",
+
+  "madnesscore.player.born_as": "§7You have been born as: %s",
+  "madnesscore.player.reborn_as": "§7You were reborn as: %s",
+  "madnesscore.player.identity_changed": "§7Your identity is now: %s",
+  "madnesscore.player.bloodline_changed": "§7Your bloodline has been changed to: %s",
+  "madnesscore.player.bloodline_cleared": "§7Your bloodline has been cleared.",
+  "madnesscore.player.family_changed": "§7Your family has been changed to: %s",
+  "madnesscore.player.family_cleared": "§7Your family has been cleared.",
+
+  "madnesscore.check.result": "%s -> %s",
+
+  "madnesscore.species.set.success": "Set species for %d player(s) to %s",
+  "madnesscore.species.error.not_found": "Unknown species: '%s'",
+
+  "madnesscore.bloodline.set.success": "Bloodline of %d player(s) updated to: %s",
+  "madnesscore.bloodline.cleared.success": "Cleared bloodline for %d player(s).",
+  "madnesscore.bloodline.error.not_found": "Unknown bloodline: '%s'",
+
+  "madnesscore.family.set.success": "Family of %d player(s) updated to: %s",
+  "madnesscore.family.cleared.success": "Cleared family for %d player(s).",
+  "madnesscore.family.error.not_found": "Unknown family: '%s'",
+
+  "madnesscore.gamerule.unknown": "Unknown game rule: %s",
+  "madnesscore.gamerule.value": "%s = %s",
+  "madnesscore.gamerule.set": "%s set to %s"
+}

@@ -1,0 +1,48 @@
+{
+	"schemaVersion": 1,
+	"id": "madnesscore",
+	"version": "${version}",
+
+	"name": "Madness Core",
+
+	"description": "A core API for LukaMadness mods, providing extensible systems for bloodlines, species, character customization, abilities, player offset adjustments, attributes, networking, and shared utilities.",
+
+	"authors": [
+		"LukaMadness"
+	],
+
+	"contact": {
+		"sources": "https://github.com/LukaMadness/MadnessCore",
+		"discord": "https://discord.gg/rqFTEefmAT"
+	},
+
+	"license": "GPL-3.0-only",
+
+	"icon": "assets/madnesscore/icon.png",
+
+	"environment": "*",
+
+	"entrypoints": {
+		"main": [
+			"dev.lukamadness.MadnessCore"
+		],
+		"client": [
+			"dev.lukamadness.client.MadnessCoreClient"
+		]
+	},
+
+	"mixins": [
+		"madnesscore.mixins.json",
+		{
+			"config": "madnesscore.client.mixins.json",
+			"environment": "client"
+		}
+	],
+
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
