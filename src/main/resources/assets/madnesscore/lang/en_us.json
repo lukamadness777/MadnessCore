@@ -26,5 +26,7 @@
 
   "madnesscore.gamerule.unknown": "Unknown game rule: %s",
   "madnesscore.gamerule.value": "%s = %s",
-  "madnesscore.gamerule.set": "%s set to %s"
+  "madnesscore.gamerule.set": "%s set to %s",
+
+  "madnesscore.species.human": "Humanoasd"
 }

@@ -1,4 +1,3 @@
-// dev/lukamadness/madnesscore/command/MadnessCoreCommand.java
 package dev.lukamadness.madnesscore.command;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -22,7 +21,9 @@ import dev.lukamadness.madnesscore.data.PlayerRaceData;
 import dev.lukamadness.madnesscore.util.MadnessLang;
 import dev.lukamadness.madnesscore.util.RaceText;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -52,15 +53,13 @@ public class MadnessCoreCommand {
                 .then(buildCheck());
     }
 
-    // ── Resolución nombre-mostrado -> objeto registrado ─────────────────────
-    // Los comandos ahora reciben el displayName (sin colores, case-insensitive),
-    // no el Identifier crudo. Internamente seguimos usando Identifier siempre.
+    // ── Resolución nombre-mostrado -> objeto (solo para filtros de "list") ──
 
     private static Species resolveSpecies(String input) {
         if (input == null) return null;
         String needle = RaceText.stripColor(input).trim();
         for (Species s : SpeciesRegistry.getAll().values()) {
-            if (RaceText.stripColor(s.displayName()).equalsIgnoreCase(needle)) return s;
+            if (RaceText.stripColor(s.displayName().getString()).equalsIgnoreCase(needle)) return s;
         }
         return null;
     }
@@ -77,16 +76,9 @@ public class MadnessCoreCommand {
         return null;
     }
 
-    private static Family resolveFamily(String input, Identifier bloodlineFilter) {
-        if (input == null) return null;
-        String needle = RaceText.stripColor(input).trim();
-        for (Family f : FamilyRegistry.getForBloodline(bloodlineFilter)) {
-            if (RaceText.stripColor(f.displayName()).equalsIgnoreCase(needle)) return f;
-        }
-        return null;
-    }
-
     // ── /madnesscore species list|set ───────────────────────────────────────
+    // /madnesscore species set <targets> <species> [<bloodline> [<family>]]
+    // Lo que NO se especifica se rerollea automáticamente.
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildSpecies() {
         return CommandManager.literal("species")
@@ -95,55 +87,51 @@ public class MadnessCoreCommand {
                 .then(CommandManager.literal("set")
                         .requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.argument("targets", EntityArgumentType.players())
-                                .then(CommandManager.argument("species", StringArgumentType.string())
-                                        .suggests(MadnessCoreCommand::suggestSpeciesNames)
+                                .then(CommandManager.argument("species", IdentifierArgumentType.identifier())
+                                        .suggests((ctx, builder) ->
+                                                CommandSource.suggestIdentifiers(SpeciesRegistry.getAll().keySet(), builder))
                                         .executes(ctx -> executeSpeciesChain(ctx.getSource(),
                                                 EntityArgumentType.getPlayers(ctx, "targets"),
-                                                StringArgumentType.getString(ctx, "species"), null, null))
-                                        .then(CommandManager.argument("bloodline", StringArgumentType.string())
-                                                .suggests(MadnessCoreCommand::suggestBloodlineNamesForChain)
+                                                IdentifierArgumentType.getIdentifier(ctx, "species"), null, null))
+                                        .then(CommandManager.argument("bloodline", IdentifierArgumentType.identifier())
+                                                .suggests(MadnessCoreCommand::suggestBloodlinesForSpeciesArg)
                                                 .executes(ctx -> executeSpeciesChain(ctx.getSource(),
                                                         EntityArgumentType.getPlayers(ctx, "targets"),
-                                                        StringArgumentType.getString(ctx, "species"),
-                                                        StringArgumentType.getString(ctx, "bloodline"), null))
-                                                .then(CommandManager.argument("family", StringArgumentType.string())
-                                                        .suggests(MadnessCoreCommand::suggestFamilyNamesForChain)
+                                                        IdentifierArgumentType.getIdentifier(ctx, "species"),
+                                                        IdentifierArgumentType.getIdentifier(ctx, "bloodline"), null))
+                                                .then(CommandManager.argument("family", IdentifierArgumentType.identifier())
+                                                        .suggests(MadnessCoreCommand::suggestFamiliesForBloodlineArgInSpeciesChain)
                                                         .executes(ctx -> executeSpeciesChain(ctx.getSource(),
                                                                 EntityArgumentType.getPlayers(ctx, "targets"),
-                                                                StringArgumentType.getString(ctx, "species"),
-                                                                StringArgumentType.getString(ctx, "bloodline"),
-                                                                StringArgumentType.getString(ctx, "family"))))))));
+                                                                IdentifierArgumentType.getIdentifier(ctx, "species"),
+                                                                IdentifierArgumentType.getIdentifier(ctx, "bloodline"),
+                                                                IdentifierArgumentType.getIdentifier(ctx, "family"))))))));
     }
 
-    private static CompletableFuture<Suggestions> suggestSpeciesNames(
+    /** Sugiere bloodlines que apliquen a la especie ya tipeada en el argumento "species". */
+    private static CompletableFuture<Suggestions> suggestBloodlinesForSpeciesArg(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
-        for (Species s : SpeciesRegistry.getAll().values()) {
-            builder.suggest(RaceText.stripColor(s.displayName()));
+        Collection<Identifier> allowed;
+        try {
+            Identifier speciesId = IdentifierArgumentType.getIdentifier(ctx, "species");
+            allowed = BloodlineRegistry.getForSpecies(speciesId).stream().map(Bloodline::id).toList();
+        } catch (IllegalArgumentException e) {
+            allowed = BloodlineRegistry.getAll().keySet();
         }
-        return builder.buildFuture();
+        return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
-    private static CompletableFuture<Suggestions> suggestBloodlineNamesForChain(
+    /** Sugiere familias que apliquen al bloodline ya tipeado en el argumento "bloodline" (dentro del chain de species). */
+    private static CompletableFuture<Suggestions> suggestFamiliesForBloodlineArgInSpeciesChain(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
-        Species species = resolveSpecies(StringArgumentType.getString(ctx, "species"));
-        Collection<Bloodline> pool = species == null
-                ? BloodlineRegistry.getAll().values()
-                : BloodlineRegistry.getForSpecies(species.id());
-        for (Bloodline b : pool) {
-            builder.suggest(RaceText.stripColor(b.displayName()));
+        Collection<Identifier> allowed;
+        try {
+            Identifier bloodlineId = IdentifierArgumentType.getIdentifier(ctx, "bloodline");
+            allowed = FamilyRegistry.getForBloodline(bloodlineId).stream().map(Family::id).toList();
+        } catch (IllegalArgumentException e) {
+            allowed = FamilyRegistry.getAll().keySet();
         }
-        return builder.buildFuture();
-    }
-
-    private static CompletableFuture<Suggestions> suggestFamilyNamesForChain(
-            CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
-        Species species = resolveSpecies(StringArgumentType.getString(ctx, "species"));
-        Bloodline bloodline = resolveBloodline(StringArgumentType.getString(ctx, "bloodline"),
-                species != null ? species.id() : null);
-        for (Family f : FamilyRegistry.getForBloodline(bloodline != null ? bloodline.id() : null)) {
-            builder.suggest(RaceText.stripColor(f.displayName()));
-        }
-        return builder.buildFuture();
+        return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
     private static int executeSpeciesList(ServerCommandSource source) {
@@ -155,72 +143,65 @@ public class MadnessCoreCommand {
             String chance = species.weight() > 0 && totalWeight > 0
                     ? String.format(" - %.1f%%", (species.weight() / totalWeight) * 100)
                     : " - no rolleable";
-            sb.append("\n- ").append(species.displayName()).append(" §8(").append(species.id()).append("§8)")
-                    .append(" weight=").append(species.weight()).append(chance);
+            sb.append("\n- ").append(species.displayName().getString()).append(chance);
         }
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
         return all.size();
     }
 
-    /**
-     * /madnesscore species set <targets> <species> [<bloodline> [<family>]]
-     * Lo que NO especifiques se rerollea automáticamente para esa especie/bloodline.
-     */
     private static int executeSpeciesChain(ServerCommandSource source, Collection<ServerPlayerEntity> targets,
-                                           String speciesName, String bloodlineName, String familyName) {
-        Species species = resolveSpecies(speciesName);
-        if (species == null) {
-            source.sendError(Text.translatable(MadnessLang.SPECIES_ERROR_NOT_FOUND, speciesName));
+                                           Identifier speciesId, Identifier bloodlineId, Identifier familyId) {
+        if (!SpeciesRegistry.exists(speciesId)) {
+            source.sendError(Text.translatable(MadnessLang.SPECIES_ERROR_NOT_FOUND, speciesId.toString()));
+            return 0;
+        }
+        Species species = SpeciesRegistry.get(speciesId);
+
+        if (bloodlineId != null && !BloodlineRegistry.exists(bloodlineId)) {
+            source.sendError(Text.translatable(MadnessLang.BLOODLINE_ERROR_NOT_FOUND, bloodlineId.toString()));
+            return 0;
+        }
+        if (familyId != null && !FamilyRegistry.exists(familyId)) {
+            source.sendError(Text.translatable(MadnessLang.FAMILY_ERROR_NOT_FOUND, familyId.toString()));
             return 0;
         }
 
-        Bloodline explicitBloodline = null;
-        if (bloodlineName != null) {
-            explicitBloodline = resolveBloodline(bloodlineName, species.id());
-            if (explicitBloodline == null) {
-                source.sendError(Text.translatable(MadnessLang.BLOODLINE_ERROR_NOT_FOUND, bloodlineName));
-                return 0;
-            }
-        }
-
-        Family explicitFamily = null;
-        if (familyName != null) {
-            Identifier bloodlineScope = explicitBloodline != null ? explicitBloodline.id() : null;
-            explicitFamily = resolveFamily(familyName, bloodlineScope);
-            if (explicitFamily == null) {
-                source.sendError(Text.translatable(MadnessLang.FAMILY_ERROR_NOT_FOUND, familyName));
-                return 0;
-            }
-        }
-
         MinecraftServer server = source.getServer();
+        int count = 0;
         for (ServerPlayerEntity player : targets) {
             UUID uuid = player.getUuid();
-            MadnessCoreAPI.setSpecies(server, uuid, species.id());
+            try {
+                MadnessCoreAPI.setSpecies(server, uuid, speciesId);
 
-            if (explicitBloodline != null) {
-                MadnessCoreAPI.setBloodline(server, uuid, explicitBloodline.id());
-            } else {
-                MadnessCoreAPI.rollBloodline(server, uuid);
+                if (bloodlineId != null) {
+                    MadnessCoreAPI.setBloodline(server, uuid, bloodlineId);
+                } else {
+                    MadnessCoreAPI.rollBloodline(server, uuid);
+                }
+
+                if (familyId != null) {
+                    MadnessCoreAPI.setFamily(server, uuid, familyId);
+                } else {
+                    MadnessCoreAPI.rollFamily(server, uuid);
+                }
+
+                MadnessCoreAPI.RaceProfile profile = MadnessCoreAPI.getProfile(server, uuid);
+                player.sendMessage(Text.translatable(MadnessLang.PLAYER_IDENTITY_CHANGED, RaceText.identity(profile)), false);
+                count++;
+            } catch (IllegalArgumentException e) {
+                source.sendError(Text.literal(player.getName().getString() + ": " + e.getMessage()));
             }
-
-            if (explicitFamily != null) {
-                MadnessCoreAPI.setFamily(server, uuid, explicitFamily.id());
-            } else {
-                MadnessCoreAPI.rollFamily(server, uuid);
-            }
-
-            MadnessCoreAPI.RaceProfile profile = MadnessCoreAPI.getProfile(server, uuid);
-            player.sendMessage(Text.translatable(MadnessLang.PLAYER_IDENTITY_CHANGED, RaceText.identity(profile)), false);
         }
 
-        int count = targets.size();
-        source.sendFeedback(() -> Text.translatable(MadnessLang.SPECIES_SET_SUCCESS, count, species.displayName()), false);
+        int finalCount = count;
+        source.sendFeedback(() -> Text.translatable(MadnessLang.SPECIES_SET_SUCCESS, finalCount, species.displayName()), false);
         return count;
     }
 
     // ── /madnesscore bloodline list|set|count ───────────────────────────────
+    // /madnesscore bloodline set <targets> <bloodline> [<family>]  |  set <targets> none
+    // Igual que species: si no das familia, se rerollea sola.
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildBloodline() {
         return CommandManager.literal("bloodline")
@@ -233,11 +214,17 @@ public class MadnessCoreCommand {
                 .then(CommandManager.literal("set")
                         .requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.argument("targets", EntityArgumentType.players())
-                                .then(CommandManager.argument("bloodline", StringArgumentType.string())
+                                .then(CommandManager.argument("bloodline", IdentifierArgumentType.identifier())
                                         .suggests(MadnessCoreCommand::suggestBloodlinesForTargets)
-                                        .executes(ctx -> executeBloodlineSet(ctx.getSource(),
+                                        .executes(ctx -> executeBloodlineChain(ctx.getSource(),
                                                 EntityArgumentType.getPlayers(ctx, "targets"),
-                                                StringArgumentType.getString(ctx, "bloodline"))))
+                                                IdentifierArgumentType.getIdentifier(ctx, "bloodline"), null))
+                                        .then(CommandManager.argument("family", IdentifierArgumentType.identifier())
+                                                .suggests(MadnessCoreCommand::suggestFamiliesForBloodlineArgInBloodlineChain)
+                                                .executes(ctx -> executeBloodlineChain(ctx.getSource(),
+                                                        EntityArgumentType.getPlayers(ctx, "targets"),
+                                                        IdentifierArgumentType.getIdentifier(ctx, "bloodline"),
+                                                        IdentifierArgumentType.getIdentifier(ctx, "family")))))
                                 .then(CommandManager.literal("none")
                                         .executes(ctx -> executeBloodlineClear(ctx.getSource(),
                                                 EntityArgumentType.getPlayers(ctx, "targets"))))))
@@ -245,24 +232,42 @@ public class MadnessCoreCommand {
                         .executes(ctx -> executeBloodlineCount(ctx.getSource())));
     }
 
+    private static CompletableFuture<Suggestions> suggestSpeciesNames(
+            CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
+        for (Species s : SpeciesRegistry.getAll().values()) {
+            builder.suggest(RaceText.stripColor(s.displayName().getString()));
+        }
+        return builder.buildFuture();
+    }
+
     /** Solo sugiere bloodlines que apliquen a la especie ACTUAL del primer target. */
     private static CompletableFuture<Suggestions> suggestBloodlinesForTargets(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
-        Collection<Bloodline> pool = BloodlineRegistry.getAll().values();
+        Collection<Identifier> allowed = BloodlineRegistry.getAll().keySet();
         try {
             Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(ctx, "targets");
             if (!targets.isEmpty()) {
                 MinecraftServer server = ctx.getSource().getServer();
                 Identifier speciesId = MadnessCoreAPI.getSpecies(server, targets.iterator().next().getUuid()).id();
-                pool = BloodlineRegistry.getForSpecies(speciesId);
+                allowed = BloodlineRegistry.getForSpecies(speciesId).stream().map(Bloodline::id).toList();
             }
         } catch (CommandSyntaxException ignored) {
             // "targets" todavía no resuelve a nada válido -> mostramos todos como fallback
         }
-        for (Bloodline b : pool) {
-            builder.suggest(RaceText.stripColor(b.displayName()));
+        return CommandSource.suggestIdentifiers(allowed, builder);
+    }
+
+    /** Sugiere familias que apliquen al bloodline ya tipeado en el argumento "bloodline" (dentro del chain de bloodline). */
+    private static CompletableFuture<Suggestions> suggestFamiliesForBloodlineArgInBloodlineChain(
+            CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
+        Collection<Identifier> allowed;
+        try {
+            Identifier bloodlineId = IdentifierArgumentType.getIdentifier(ctx, "bloodline");
+            allowed = FamilyRegistry.getForBloodline(bloodlineId).stream().map(Family::id).toList();
+        } catch (IllegalArgumentException e) {
+            allowed = FamilyRegistry.getAll().keySet();
         }
-        return builder.buildFuture();
+        return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
     private static int executeBloodlineList(ServerCommandSource source, String speciesName) {
@@ -282,33 +287,47 @@ public class MadnessCoreCommand {
 
         StringBuilder sb = new StringBuilder("=== Bloodlines (" + bloodlines.size() + ") ===");
         for (Bloodline b : bloodlines) {
-            String scope = b.isAll() ? "All" : b.speciesId().toString();
-            sb.append("\n- ").append(b.displayName()).append(" §8(").append(b.id()).append("§8)")
-                    .append(" [").append(scope).append("]");
+            sb.append("\n- ").append(b.displayName());
         }
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
         return bloodlines.size();
     }
 
-    private static int executeBloodlineSet(ServerCommandSource source, Collection<ServerPlayerEntity> targets, String bloodlineName) {
-        Bloodline bloodline = resolveBloodline(bloodlineName, null);
-        if (bloodline == null) {
-            source.sendError(Text.translatable(MadnessLang.BLOODLINE_ERROR_NOT_FOUND, bloodlineName));
+    private static int executeBloodlineChain(ServerCommandSource source, Collection<ServerPlayerEntity> targets,
+                                             Identifier bloodlineId, Identifier familyId) {
+        if (!BloodlineRegistry.exists(bloodlineId)) {
+            source.sendError(Text.translatable(MadnessLang.BLOODLINE_ERROR_NOT_FOUND, bloodlineId.toString()));
             return 0;
         }
+        Bloodline bloodline = BloodlineRegistry.get(bloodlineId);
+
+        if (familyId != null && !FamilyRegistry.exists(familyId)) {
+            source.sendError(Text.translatable(MadnessLang.FAMILY_ERROR_NOT_FOUND, familyId.toString()));
+            return 0;
+        }
+
         MinecraftServer server = source.getServer();
         int count = 0;
         for (ServerPlayerEntity player : targets) {
+            UUID uuid = player.getUuid();
             try {
-                MadnessCoreAPI.setBloodline(server, player.getUuid(), bloodline.id());
-                player.sendMessage(Text.translatable(MadnessLang.PLAYER_BLOODLINE_CHANGED,
-                        Text.literal(bloodline.displayName())), false);
+                MadnessCoreAPI.setBloodline(server, uuid, bloodlineId);
+
+                if (familyId != null) {
+                    MadnessCoreAPI.setFamily(server, uuid, familyId);
+                } else {
+                    MadnessCoreAPI.rollFamily(server, uuid);
+                }
+
+                MadnessCoreAPI.RaceProfile profile = MadnessCoreAPI.getProfile(server, uuid);
+                player.sendMessage(Text.translatable(MadnessLang.PLAYER_IDENTITY_CHANGED, RaceText.identity(profile)), false);
                 count++;
             } catch (IllegalArgumentException e) {
                 source.sendError(Text.literal(player.getName().getString() + ": " + e.getMessage()));
             }
         }
+
         int finalCount = count;
         source.sendFeedback(() -> Text.translatable(MadnessLang.BLOODLINE_SET_SUCCESS, finalCount, bloodline.displayName()), false);
         return count;
@@ -356,11 +375,11 @@ public class MadnessCoreCommand {
                 .then(CommandManager.literal("set")
                         .requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.argument("targets", EntityArgumentType.players())
-                                .then(CommandManager.argument("family", StringArgumentType.string())
+                                .then(CommandManager.argument("family", IdentifierArgumentType.identifier())
                                         .suggests(MadnessCoreCommand::suggestFamiliesForTargets)
                                         .executes(ctx -> executeFamilySet(ctx.getSource(),
                                                 EntityArgumentType.getPlayers(ctx, "targets"),
-                                                StringArgumentType.getString(ctx, "family"))))
+                                                IdentifierArgumentType.getIdentifier(ctx, "family"))))
                                 .then(CommandManager.literal("none")
                                         .executes(ctx -> executeFamilyClear(ctx.getSource(),
                                                 EntityArgumentType.getPlayers(ctx, "targets"))))))
@@ -379,26 +398,19 @@ public class MadnessCoreCommand {
     /** Solo sugiere familias que apliquen al bloodline ACTUAL del primer target. */
     private static CompletableFuture<Suggestions> suggestFamiliesForTargets(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
-        Identifier bloodlineFilter = null;
-        boolean filtered = false;
+        Collection<Identifier> allowed = FamilyRegistry.getAll().keySet();
         try {
             Collection<ServerPlayerEntity> targets = EntityArgumentType.getPlayers(ctx, "targets");
             if (!targets.isEmpty()) {
                 MinecraftServer server = ctx.getSource().getServer();
                 Bloodline current = MadnessCoreAPI.getBloodline(server, targets.iterator().next().getUuid());
-                bloodlineFilter = current == null ? null : current.id();
-                filtered = true;
+                Identifier bloodlineId = current == null ? null : current.id();
+                allowed = FamilyRegistry.getForBloodline(bloodlineId).stream().map(Family::id).toList();
             }
         } catch (CommandSyntaxException ignored) {
             // "targets" todavía no resuelve a nada válido -> mostramos todos como fallback
         }
-        Collection<Family> pool = filtered
-                ? FamilyRegistry.getForBloodline(bloodlineFilter)
-                : FamilyRegistry.getAll().values();
-        for (Family f : pool) {
-            builder.suggest(RaceText.stripColor(f.displayName()));
-        }
-        return builder.buildFuture();
+        return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
     private static int executeFamilyList(ServerCommandSource source, String bloodlineName) {
@@ -418,26 +430,24 @@ public class MadnessCoreCommand {
 
         StringBuilder sb = new StringBuilder("=== Families (" + families.size() + ") ===");
         for (Family f : families) {
-            String scope = f.isAll() ? "All" : f.bloodlineId().toString();
-            sb.append("\n- ").append(f.displayName()).append(" §8(").append(f.id()).append("§8)")
-                    .append(" [").append(scope).append("]");
+            sb.append("\n- ").append(f.displayName());
         }
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
         return families.size();
     }
 
-    private static int executeFamilySet(ServerCommandSource source, Collection<ServerPlayerEntity> targets, String familyName) {
-        Family family = resolveFamily(familyName, null);
-        if (family == null) {
-            source.sendError(Text.translatable(MadnessLang.FAMILY_ERROR_NOT_FOUND, familyName));
+    private static int executeFamilySet(ServerCommandSource source, Collection<ServerPlayerEntity> targets, Identifier familyId) {
+        if (!FamilyRegistry.exists(familyId)) {
+            source.sendError(Text.translatable(MadnessLang.FAMILY_ERROR_NOT_FOUND, familyId.toString()));
             return 0;
         }
+        Family family = FamilyRegistry.get(familyId);
         MinecraftServer server = source.getServer();
         int count = 0;
         for (ServerPlayerEntity player : targets) {
             try {
-                MadnessCoreAPI.setFamily(server, player.getUuid(), family.id());
+                MadnessCoreAPI.setFamily(server, player.getUuid(), familyId);
                 player.sendMessage(Text.translatable(MadnessLang.PLAYER_FAMILY_CHANGED,
                         Text.literal(family.displayName())), false);
                 count++;
@@ -486,7 +496,7 @@ public class MadnessCoreCommand {
                 .executes(ctx -> executeGameruleList(ctx.getSource()))
                 .then(CommandManager.argument("rule", StringArgumentType.word())
                         .suggests((ctx, builder) ->
-                                net.minecraft.command.CommandSource.suggestMatching(GameRuleRegistry.getAll().keySet(), builder))
+                                CommandSource.suggestMatching(GameRuleRegistry.getAll().keySet(), builder))
                         .executes(ctx -> executeGameruleQuery(ctx.getSource(),
                                 StringArgumentType.getString(ctx, "rule")))
                         .then(CommandManager.argument("value", BoolArgumentType.bool())

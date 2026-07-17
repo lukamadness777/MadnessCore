@@ -1,5 +1,7 @@
 package dev.lukamadness.madnesscore.api;
 
+import dev.lukamadness.madnesscore.MadnessCore;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -18,15 +20,15 @@ public final class SpeciesRegistry {
 
     private static final Map<Identifier, Species> SPECIES = new LinkedHashMap<>();
 
-    public static final Identifier HUMAN_ID = Identifier.of("madnesscore", "human");
-    public static final Species HUMAN = register(HUMAN_ID, "Human", 1.0);
+    public static final Identifier HUMAN_ID = Identifier.of(MadnessCore.MOD_ID, "human");
+    public static final Species HUMAN = register(HUMAN_ID, Text.translatable("madnesscore.species.human"), 1.0);
 
     /** weight = 1.0 por defecto (misma chance relativa que Human). */
-    public static Species register(Identifier id, String displayName) {
+    public static Species register(Identifier id, Text displayName) {
         return register(id, displayName, 1.0);
     }
 
-    public static Species register(Identifier id, String displayName, double weight) {
+    public static Species register(Identifier id, Text displayName, double weight) {
         if (SPECIES.containsKey(id)) {
             throw new IllegalStateException("Species already registered: " + id);
         }
@@ -35,11 +37,11 @@ public final class SpeciesRegistry {
         return species;
     }
 
-    public static Species register(String namespace, String path, String displayName) {
+    public static Species register(String namespace, String path, Text displayName) {
         return register(Identifier.of(namespace, path), displayName, 1.0);
     }
 
-    public static Species register(String namespace, String path, String displayName, double weight) {
+    public static Species register(String namespace, String path, Text displayName, double weight) {
         return register(Identifier.of(namespace, path), displayName, weight);
     }
 
