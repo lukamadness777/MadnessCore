@@ -10,10 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Registro público de especies. "human" existe siempre por defecto (weight = 1).
- * Otros mods llaman a {@link #register} en su ModInitializer para añadir las suyas.
- */
 public final class SpeciesRegistry {
 
     private SpeciesRegistry() {}
@@ -23,7 +19,6 @@ public final class SpeciesRegistry {
     public static final Identifier HUMAN_ID = Identifier.of(MadnessCore.MOD_ID, "human");
     public static final Species HUMAN = register(HUMAN_ID, Text.translatable("madnesscore.species.human"), 1.0);
 
-    /** weight = 1.0 por defecto (misma chance relativa que Human). */
     public static Species register(Identifier id, Text displayName) {
         return register(id, displayName, 1.0);
     }
@@ -61,12 +56,6 @@ public final class SpeciesRegistry {
         return Collections.unmodifiableMap(SPECIES);
     }
 
-    /**
-     * Cambia el weight de una especie ya registrada (útil para reajustar Human,
-     * que se registra automáticamente con weight=1 al cargar la clase).
-     * Ej: {@code SpeciesRegistry.setWeight(SpeciesRegistry.HUMAN_ID, 3.0)} para
-     * hacerlo 3 veces más probable que una especie con weight=1.
-     */
     public static void setWeight(Identifier id, double newWeight) {
         Species current = SPECIES.get(id);
         if (current == null) {
@@ -75,10 +64,6 @@ public final class SpeciesRegistry {
         SPECIES.put(id, new Species(current.id(), current.displayName(), newWeight));
     }
 
-    /**
-     * Rollea una especie al azar, ponderada por weight entre TODAS las registradas
-     * (con weight > 0). Si no hay ninguna elegible, cae en Human.
-     */
     public static Identifier rollAny() {
         List<Species> candidates = new ArrayList<>();
         double totalWeight = 0;

@@ -53,8 +53,6 @@ public class MadnessCoreCommand {
                 .then(buildCheck());
     }
 
-    // ── Resolución nombre-mostrado -> objeto (solo para filtros de "list") ──
-
     private static Species resolveSpecies(String input) {
         if (input == null) return null;
         String needle = RaceText.stripColor(input).trim();
@@ -71,14 +69,10 @@ public class MadnessCoreCommand {
                 ? BloodlineRegistry.getAll().values()
                 : BloodlineRegistry.getForSpecies(speciesFilter);
         for (Bloodline b : pool) {
-            if (RaceText.stripColor(b.displayName()).equalsIgnoreCase(needle)) return b;
+            if (RaceText.stripColor(b.displayName().getString()).equalsIgnoreCase(needle)) return b;
         }
         return null;
     }
-
-    // ── /madnesscore species list|set ───────────────────────────────────────
-    // /madnesscore species set <targets> <species> [<bloodline> [<family>]]
-    // Lo que NO se especifica se rerollea automáticamente.
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildSpecies() {
         return CommandManager.literal("species")
@@ -108,7 +102,6 @@ public class MadnessCoreCommand {
                                                                 IdentifierArgumentType.getIdentifier(ctx, "family"))))))));
     }
 
-    /** Sugiere bloodlines que apliquen a la especie ya tipeada en el argumento "species". */
     private static CompletableFuture<Suggestions> suggestBloodlinesForSpeciesArg(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         Collection<Identifier> allowed;
@@ -121,7 +114,6 @@ public class MadnessCoreCommand {
         return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
-    /** Sugiere familias que apliquen al bloodline ya tipeado en el argumento "bloodline" (dentro del chain de species). */
     private static CompletableFuture<Suggestions> suggestFamiliesForBloodlineArgInSpeciesChain(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         Collection<Identifier> allowed;
@@ -199,10 +191,6 @@ public class MadnessCoreCommand {
         return count;
     }
 
-    // ── /madnesscore bloodline list|set|count ───────────────────────────────
-    // /madnesscore bloodline set <targets> <bloodline> [<family>]  |  set <targets> none
-    // Igual que species: si no das familia, se rerollea sola.
-
     private static LiteralArgumentBuilder<ServerCommandSource> buildBloodline() {
         return CommandManager.literal("bloodline")
                 .then(CommandManager.literal("list")
@@ -240,7 +228,6 @@ public class MadnessCoreCommand {
         return builder.buildFuture();
     }
 
-    /** Solo sugiere bloodlines que apliquen a la especie ACTUAL del primer target. */
     private static CompletableFuture<Suggestions> suggestBloodlinesForTargets(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         Collection<Identifier> allowed = BloodlineRegistry.getAll().keySet();
@@ -252,12 +239,10 @@ public class MadnessCoreCommand {
                 allowed = BloodlineRegistry.getForSpecies(speciesId).stream().map(Bloodline::id).toList();
             }
         } catch (CommandSyntaxException ignored) {
-            // "targets" todavía no resuelve a nada válido -> mostramos todos como fallback
         }
         return CommandSource.suggestIdentifiers(allowed, builder);
     }
 
-    /** Sugiere familias que apliquen al bloodline ya tipeado en el argumento "bloodline" (dentro del chain de bloodline). */
     private static CompletableFuture<Suggestions> suggestFamiliesForBloodlineArgInBloodlineChain(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         Collection<Identifier> allowed;
@@ -287,7 +272,7 @@ public class MadnessCoreCommand {
 
         StringBuilder sb = new StringBuilder("=== Bloodlines (" + bloodlines.size() + ") ===");
         for (Bloodline b : bloodlines) {
-            sb.append("\n- ").append(b.displayName());
+            sb.append("\n- ").append(b.displayName().getString());
         }
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
@@ -354,15 +339,13 @@ public class MadnessCoreCommand {
         StringBuilder sb = new StringBuilder("=== Bloodline Statistics ===");
         counts.forEach((id, n) -> {
             Bloodline b = BloodlineRegistry.get(id);
-            sb.append("\n").append(b != null ? b.displayName() : "None").append(": ").append(n);
+            sb.append(b != null ? b.displayName().getString() : "None").append(": ").append(n);
         });
         sb.append("\nTotal Players: ").append(data.getAll().size());
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
         return data.getAll().size();
     }
-
-    // ── /madnesscore family list|set|count ──────────────────────────────────
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildFamily() {
         return CommandManager.literal("family")
@@ -390,12 +373,11 @@ public class MadnessCoreCommand {
     private static CompletableFuture<Suggestions> suggestAllBloodlineNames(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         for (Bloodline b : BloodlineRegistry.getAll().values()) {
-            builder.suggest(RaceText.stripColor(b.displayName()));
+            builder.suggest(RaceText.stripColor(b.displayName().getString()));
         }
         return builder.buildFuture();
     }
 
-    /** Solo sugiere familias que apliquen al bloodline ACTUAL del primer target. */
     private static CompletableFuture<Suggestions> suggestFamiliesForTargets(
             CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
         Collection<Identifier> allowed = FamilyRegistry.getAll().keySet();
@@ -408,7 +390,6 @@ public class MadnessCoreCommand {
                 allowed = FamilyRegistry.getForBloodline(bloodlineId).stream().map(Family::id).toList();
             }
         } catch (CommandSyntaxException ignored) {
-            // "targets" todavía no resuelve a nada válido -> mostramos todos como fallback
         }
         return CommandSource.suggestIdentifiers(allowed, builder);
     }
@@ -430,7 +411,7 @@ public class MadnessCoreCommand {
 
         StringBuilder sb = new StringBuilder("=== Families (" + families.size() + ") ===");
         for (Family f : families) {
-            sb.append("\n- ").append(f.displayName());
+            sb.append("\n- ").append(f.displayName().getString());
         }
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
@@ -448,8 +429,7 @@ public class MadnessCoreCommand {
         for (ServerPlayerEntity player : targets) {
             try {
                 MadnessCoreAPI.setFamily(server, player.getUuid(), familyId);
-                player.sendMessage(Text.translatable(MadnessLang.PLAYER_FAMILY_CHANGED,
-                        Text.literal(family.displayName())), false);
+                player.sendMessage(Text.translatable(MadnessLang.PLAYER_FAMILY_CHANGED, family.displayName()), false);
                 count++;
             } catch (IllegalArgumentException e) {
                 source.sendError(Text.literal(player.getName().getString() + ": " + e.getMessage()));
@@ -481,15 +461,13 @@ public class MadnessCoreCommand {
         StringBuilder sb = new StringBuilder("=== Family Statistics ===");
         counts.forEach((id, n) -> {
             Family f = FamilyRegistry.get(id);
-            sb.append("\n").append(f != null ? f.displayName() : "None").append(": ").append(n);
+            sb.append(f != null ? f.displayName().getString() : "None").append(": ").append(n);
         });
         sb.append("\nTotal Players: ").append(data.getAll().size());
         String output = sb.toString();
         source.sendFeedback(() -> Text.literal(output), false);
         return data.getAll().size();
     }
-
-    // ── /madnesscore gamerule [rule] [true|false] ───────────────────────────
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildGamerule() {
         return CommandManager.literal("gamerule")
@@ -537,7 +515,6 @@ public class MadnessCoreCommand {
         return value ? 1 : 0;
     }
 
-    // ── /madnesscore check <jugador> ────────────────────────────────────────
 
     private static LiteralArgumentBuilder<ServerCommandSource> buildCheck() {
         return CommandManager.literal("check")

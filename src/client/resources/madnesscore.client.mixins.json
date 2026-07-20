@@ -1,9 +1,9 @@
 {
 	"required": true,
-	"package": "dev.lukamadness.client.mixin",
+	"package": "dev.lukamadness.madnesscore.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"PlayerEntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

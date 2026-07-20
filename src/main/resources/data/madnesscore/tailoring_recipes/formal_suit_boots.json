@@ -1,0 +1,10 @@
+{
+  "output": {
+    "item": "madnesscore:formal_suit_boots",
+    "count": 1
+  },
+  "ingredients": [
+    { "item": "madnesscore:brown_fabric", "count": 1 },
+    { "item": "madnesscore:black_fabric", "count": 1 }
+  ]
+}

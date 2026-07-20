@@ -1,0 +1,9 @@
+{
+  "output": {
+    "item": "madnesscore:dyeable_shirt",
+    "count": 1
+  },
+  "ingredients": [
+    { "item": "madnesscore:white_fabric", "count": 1 }
+  ]
+}

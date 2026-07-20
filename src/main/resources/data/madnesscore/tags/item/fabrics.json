@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "madnesscore:white_fabric",
+    "madnesscore:black_fabric",
+    "madnesscore:blue_fabric",
+    "madnesscore:brown_fabric",
+    "madnesscore:cyan_fabric",
+    "madnesscore:gray_fabric",
+    "madnesscore:green_fabric",
+    "madnesscore:light_blue_fabric",
+    "madnesscore:light_gray_fabric",
+    "madnesscore:lime_fabric",
+    "madnesscore:magenta_fabric",
+    "madnesscore:orange_fabric",
+    "madnesscore:pink_fabric",
+    "madnesscore:purple_fabric",
+    "madnesscore:red_fabric",
+    "madnesscore:yellow_fabric"
+  ]
+}

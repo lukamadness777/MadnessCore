@@ -28,5 +28,116 @@
   "madnesscore.gamerule.value": "%s = %s",
   "madnesscore.gamerule.set": "%s set to %s",
 
-  "madnesscore.species.human": "Humanoasd"
+  "madnesscore.species.human": "Human",
+  "madnesscore.gui.powers": "Powers",
+
+  "item.madnesscore.white_fabric": "White Fabric",
+  "item.madnesscore.black_fabric": "Black Fabric",
+  "item.madnesscore.blue_fabric": "Blue Fabric",
+  "item.madnesscore.brown_fabric": "Brown Fabric",
+  "item.madnesscore.cyan_fabric": "Cyan Fabric",
+  "item.madnesscore.gray_fabric": "Gray Fabric",
+  "item.madnesscore.green_fabric": "Green Fabric",
+  "item.madnesscore.light_blue_fabric": "Light Blue Fabric",
+  "item.madnesscore.light_gray_fabric": "Light Gray Fabric",
+  "item.madnesscore.lime_fabric": "Lime Fabric",
+  "item.madnesscore.magenta_fabric": "Magenta Fabric",
+  "item.madnesscore.orange_fabric": "Orange Fabric",
+  "item.madnesscore.pink_fabric": "Pink Fabric",
+  "item.madnesscore.purple_fabric": "Purple Fabric",
+  "item.madnesscore.red_fabric": "Red Fabric",
+  "item.madnesscore.yellow_fabric": "Yellow Fabric",
+  "item.madnesscore.dyeable_shirt": "Dyeable Shirt",
+  "item.madnesscore.dyeable_jacket": "Dyeable Jacket",
+  "item.madnesscore.dyeable_leggins": "Dyeable Pants",
+  "item.madnesscore.formal_suit": "Formal Suit",
+  "item.madnesscore.formal_suit_boots": "Formal Suit Boots",
+  "tooltip.madnesscore.tie_show": "Tie: ",
+  "tooltip.madnesscore.show": "Shown",
+  "tooltip.madnesscore.hide": "Hidden",
+  "tooltip.madnesscore.tie_color": "Tie Color: ",
+  "tooltip.madnesscore.shirt_color": "Shirt Color: ",
+  "tooltip.madnesscore.suit_color": "Suit Color: ",
+  "tooltip.madnesscore.dyeable_tip": "Can be dyed.",
+  "tooltip.madnesscore.color": "Color: ",
+  "block.madnesscore.tailoring_table": "Tailoring Table",
+
+  "itemGroup.madnesscore.madness_core": "Madness Core",
+  "item.madnesscore.madness_core": "Madness Core",
+
+  "container.madnesscore.tailoring_table": "Tailoring Table",
+
+  "accessories.slot.jacket": "Jacket",
+
+  "madnesscore.config.title": "Madness Core Configuration",
+
+  "madnesscore.config.tab.general": "General",
+  "madnesscore.config.tab.character_offsets": "Character Offsets",
+  "madnesscore.config.general.placeholder": "General settings go here.",
+  "madnesscore.config.offsets.placeholder": "Character offsets go here.",
+
+  "madnesscore.config.section.hair": "Hair %s",
+  "madnesscore.config.section.eyes": "Eyes %s",
+  "madnesscore.config.section.skin": "Skin %s",
+
+  "madnesscore.config.hair.type": "Hair Type: %s",
+  "madnesscore.config.hair.color": "Hair Color",
+  "madnesscore.config.hair.draw": "Draw Hair",
+
+  "madnesscore.config.eye.color": "Eye Color",
+  "madnesscore.config.eye.draw": "Draw Eyes",
+  "madnesscore.config.eye.offset_x": "Eye X Offset: %s",
+  "madnesscore.config.eye.offset_y": "Eye Y Offset: %s",
+  "madnesscore.config.eye.width": "Eye Width: %s",
+  "madnesscore.config.eye.height": "Eye Height: %s",
+
+  "madnesscore.config.skin.color": "Skin Color",
+
+  "madnesscore.config.preview.your_skin": "Your skin",
+  "madnesscore.config.preview.template": "Skin Preview",
+
+  "madnesscore.config.draw.title_hair": "Draw Hair",
+  "madnesscore.config.draw.title_eyes": "Draw Eyes",
+  "madnesscore.config.draw.mode_draw": "Draw",
+  "madnesscore.config.draw.mode_erase": "Erase",
+  "madnesscore.config.draw.clear": "Clear",
+  "madnesscore.config.draw.select_part": "Select Part",
+  "madnesscore.config.draw.done": "Done",
+  "madnesscore.config.draw.cancel": "Cancel",
+  "madnesscore.config.draw.color_label": "Color: #%s",
+
+  "madnesscore.config.partselect.title": "Select Part",
+  "madnesscore.config.partselect.instructions": "Click a skin part to edit it",
+  "madnesscore.config.partselect.cancel": "Cancel",
+
+  "madnesscore.config.colorpicker.pick": "Pick from screen \uD83D\uDCA7",
+  "madnesscore.config.colorpicker.done": "Done",
+  "madnesscore.config.colorpicker.cancel": "Cancel",
+  "madnesscore.config.colorpicker.eyedropper_hint": "Click anywhere to pick a color",
+
+  "madnesscore.config.region.label": "%s - %s - %s",
+
+  "madnesscore.bodypart.head": "Head",
+  "madnesscore.bodypart.body": "Body",
+  "madnesscore.bodypart.right_arm": "Right Arm",
+  "madnesscore.bodypart.left_arm": "Left Arm",
+  "madnesscore.bodypart.right_leg": "Right Leg",
+  "madnesscore.bodypart.left_leg": "Left Leg",
+
+  "madnesscore.layer.base": "Base",
+  "madnesscore.layer.overlay": "Overlay",
+
+  "madnesscore.face.top": "Top",
+  "madnesscore.face.bottom": "Bottom",
+  "madnesscore.face.right": "Right",
+  "madnesscore.face.front": "Front",
+  "madnesscore.face.left": "Left",
+  "madnesscore.face.back": "Back",
+  "madnesscore.face.pad_left": "Left Pad",
+  "madnesscore.face.pad_right": "Right Pad",
+
+  "madnesscore.hairtype.bald": "Bald",
+  "madnesscore.hairtype.short": "Short",
+  "madnesscore.hairtype.medium": "Medium",
+  "madnesscore.hairtype.long": "Long"
 }

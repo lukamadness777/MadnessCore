@@ -13,12 +13,14 @@ public final class RaceText {
         if (profile.bloodline() == null) {
             return Text.translatable(MadnessLang.IDENTITY_SPECIES_ONLY, speciesText);
         }
-        Text bloodlineText = Text.literal(profile.bloodline().displayName());
+        Text bloodlineText = profile.bloodline().displayName();
 
-        if (profile.family() == null) {
+        boolean showFamily = profile.family() != null && !profile.family().hidden();
+
+        if (!showFamily) {
             return Text.translatable(MadnessLang.IDENTITY_SPECIES_BLOODLINE, speciesText, bloodlineText);
         }
-        Text familyText = Text.literal(profile.family().displayName());
+        Text familyText = profile.family().displayName();
 
         return Text.translatable(MadnessLang.IDENTITY_SPECIES_BLOODLINE_FAMILY, speciesText, bloodlineText, familyText);
     }

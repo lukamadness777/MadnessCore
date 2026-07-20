@@ -1,10 +1,8 @@
 {
 	"required": true,
-	"package": "dev.lukamadness.mixin",
+	"package": "dev.lukamadness.madnesscore.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"ExampleMixin"
-	],
+	"mixins": [],
 	"injectors": {
 		"defaultRequire": 1
 	},
