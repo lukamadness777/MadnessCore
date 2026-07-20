@@ -10,12 +10,7 @@ Madness Core provides reusable systems that allow multiple mods to share the sam
 - Species API
 - Ability framework
 - Character customization
-- Player offset system
-- Attribute utilities
-- Shared networking
-- Animation utilities
 - Common registries
-- Compatibility hooks
 - Developer API for creating addons
 
 ## Requirements
@@ -75,8 +70,6 @@ Add Madness Core as a dependency in your project and implement its APIs to creat
 - Species
 - Abilities
 - Attributes
-- Character components
-- Networking features
 
 Documentation and examples will be added in future releases.
 
@@ -95,8 +88,6 @@ Future loader support is not guaranteed.
 - Species API
 - Ability System
 - Character Offset API
-- Networking API
-- Animation API
 - Documentation
 - Examples
 - Public API Reference
