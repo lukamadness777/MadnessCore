@@ -139,5 +139,7 @@
   "madnesscore.hairtype.bald": "Bald",
   "madnesscore.hairtype.short": "Short",
   "madnesscore.hairtype.medium": "Medium",
-  "madnesscore.hairtype.long": "Long"
+  "madnesscore.hairtype.long": "Long",
+
+  "madnesscore.jei.category.tailoring": "Tailoring"
 }

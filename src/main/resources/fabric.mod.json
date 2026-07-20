@@ -24,6 +24,9 @@
 		],
 		"modmenu": [
 			"dev.lukamadness.madnesscore.client.compat.ModMenuCompat"
+		],
+		"jei_mod_plugin": [
+			"dev.lukamadness.madnesscore.client.compat.jei.MadnessCoreJeiPlugin"
 		]
 	},
 	"mixins": [

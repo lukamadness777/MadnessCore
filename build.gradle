@@ -34,6 +34,11 @@ repositories {
 		name = "DevAuth"
 		url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
 	}
+
+	maven {
+		name = "Jared's maven" // host oficial de JEI desde 2023
+		url = "https://maven.blamejared.com/"
+	}
 }
 
 loom {
@@ -73,6 +78,10 @@ dependencies {
 
 	modLocalRuntime "curse.maven:jade-324717:7545228"
 	modCompileOnly "curse.maven:jade-324717:7545228"
+
+	modCompileOnly "mezz.jei:jei-1.21.1-common-api:19.21.0.246"
+	modCompileOnly "mezz.jei:jei-1.21.1-fabric-api:19.21.0.246"
+	modLocalRuntime "mezz.jei:jei-1.21.1-fabric:19.21.0.246"
 }
 
 processResources {
